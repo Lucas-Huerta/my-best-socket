@@ -1,4 +1,4 @@
-const socket = io('https://my-best-socket.onrender.com:3000');
+const socket = io('https://my-best-socket.onrender.com');
 let currentGameId = null;
 let playerColor = null;
 const htmlPlayerColor = document.getElementById("playerColor");
