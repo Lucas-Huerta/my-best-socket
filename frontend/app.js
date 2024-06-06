@@ -11,6 +11,8 @@ let config = {
     dropOffBoard: 'snapback',
     sparePieces: false,
     onDrop: handleMove,
+    onDragStart: onDragStart,
+    onSnapEnd: onSnapEnd
 };
 let board = ChessBoard('board', config);
 const game = new Chess();
@@ -51,13 +53,17 @@ document.addEventListener("DOMContentLoaded", () => {
         };
         board = ChessBoard('board', config);
         game.load(state);
-        board.position(game.fen());
     });
 
     socket.on('moveMade', ({ move, state }) => {
         console.log("moveMade", move, state);
         game.load(state);
-        board.position(game.fen());
+        config = {
+            ...config,
+            orientation: playerColor === 'white' ? 'white' : 'black',
+            position: game.fen(), 
+        };
+        board = ChessBoard('board', config);
     });
 
     socket.on('error', ({ message }) => {
@@ -83,14 +89,23 @@ function handleMove(source, target) {
         alert("Vous ne pouvez pas jouer, c'est au tour de l'autre joueur");
         return 'snapback';
     }else if (game.turn() === playerColor[0]){
-        // TODO vérfifier si le joueur n'a pas fait un mouvement sur un pion adverse
-
-        // const move = game.move({ from: source, to: target });
-        const move = game.move(target);
+        const move = game.move({ from: source, to: target }); // Mise à jour ici
         if (move === null) {
             return 'snapback';
         } else {
             socket.emit('makeMove', { gameId: currentGameId, from: source, to: target });
         }
     }
+}
+
+function onDragStart (source, piece, position, orientation) {
+    if (game.game_over()) return false
+    if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+        (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+        return false
+    }
+}
+
+function onSnapEnd () {
+    board.position(game.fen())
 }

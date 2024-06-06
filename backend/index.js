@@ -43,12 +43,11 @@ io.on('connection', (socket) => {
         }
     });
 
-    // TODO faire la prise d'attaque
     socket.on('makeMove', ({ gameId, from, to }) => {
         const game = games[gameId];
         if (game) {
             const chess = game.chess;
-            const move = chess.move(to);
+            const move = chess.move({ from, to });
             if (move) {
                 io.to(gameId).emit('moveMade', { move, state: chess.fen() });
                 game.turn = game.turn === 'white' ? 'black' : 'white';
