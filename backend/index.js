@@ -21,10 +21,10 @@ io.on('connection', (socket) => {
     socket.on('createGame', () => {
         const gameId = generateGameId();
         const chess = new Chess();
-        games[gameId] = { chess, players: [socket.id], turn: 'blanc' };
+        games[gameId] = { chess, players: [socket.id], turn: 'white' };
 
         socket.join(gameId);
-        socket.emit('gameCreated', { gameId, color: 'blanc' });
+        socket.emit('gameCreated', { gameId, color: 'white' });
         console.log(`Game created with ID: ${gameId}`);
     });
 
@@ -33,7 +33,7 @@ io.on('connection', (socket) => {
         if (game && game.players.length < 2) {
             game.players.push(socket.id);
             socket.join(gameId);
-            const color = game.players[0] === socket.id ? 'blanc' : 'noir';
+            const color = game.players[0] === socket.id ? 'white' : 'black';
             socket.emit('gameJoined', { gameId, color });
             // io.to(gameId).emit('startGame', { gameId, state: game.chess.fen() });
             console.log(`Player joined game ID: ${gameId}`);
@@ -43,14 +43,15 @@ io.on('connection', (socket) => {
         }
     });
 
+    // TODO faire la prise d'attaque
     socket.on('makeMove', ({ gameId, from, to }) => {
         const game = games[gameId];
         if (game) {
-            const { chess } = game;
-            const move = chess.move({ from, to });
+            const chess = game.chess;
+            const move = chess.move(to);
             if (move) {
                 io.to(gameId).emit('moveMade', { move, state: chess.fen() });
-                game.turn = game.turn === 'blanc' ? 'noir' : 'blanc';
+                game.turn = game.turn === 'white' ? 'black' : 'white';
                 console.log(`Move made in game ID: ${gameId}: ${from} -> ${to}`);
             } else {
                 socket.emit('invalidMove', { message: 'Invalid move' });

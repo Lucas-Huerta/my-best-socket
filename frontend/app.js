@@ -3,17 +3,19 @@ let currentGameId = null;
 let playerColor = null;
 const htmlPlayerColor = document.getElementById("playerColor");
 const htmlGameStarted = document.getElementById("gameStarted");
-// const game = new Chess();
+const htmlButtonCreate = document.getElementById("createGame");
+const htmlButtonJoin = document.getElementById("joinGame");
+
+let config = {
+    draggable: true,
+    dropOffBoard: 'snapback',
+    sparePieces: false,
+    onDrop: handleMove,
+};
+let board = ChessBoard('board', config);
+const game = new Chess();
 
 document.addEventListener("DOMContentLoaded", () => {
-    const board = ChessBoard('board', {
-        draggable: true,
-        dropOffBoard: 'trash',
-        sparePieces: false,
-        onDrop: handleMove
-    });
-
-   
     document.getElementById("createGame").addEventListener("click", () => {
         socket.emit('createGame');
     });
@@ -39,12 +41,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     socket.on('startGame', ({ gameId, state }) => {
         htmlPlayerColor.innerHTML = null;
+        htmlButtonCreate.style.display = 'none';
+        htmlButtonJoin.style.display = 'none';
         htmlGameStarted.innerHTML = `La partie a commencée ! Vous jouez les pions : ${playerColor}.`;
+        config = {
+            ...config,
+            orientation: playerColor === 'white' ? 'white' : 'black',
+            position: 'start', 
+        };
+        board = ChessBoard('board', config);
         game.load(state);
         board.position(game.fen());
     });
 
     socket.on('moveMade', ({ move, state }) => {
+        console.log("moveMade", move, state);
         game.load(state);
         board.position(game.fen());
     });
@@ -52,18 +63,6 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on('error', ({ message }) => {
         alert(`${message}.`);
     });
-
-    function handleMove(source, target) {
-        if (game.turn() !== playerColor[0]) {
-            return 'snapback';
-        }
-        const move = game.move({ from: source, to: target });
-        if (move === null) {
-            return 'snapback';
-        } else {
-            socket.emit('makeMove', { gameId: currentGameId, from: source, to: target });
-        }
-    }
 });
 
 
@@ -76,3 +75,22 @@ htmlStartGame.addEventListener("click", () => {
         alert("Vous devez rejoindre une partie avant de commencer")
     }
 })
+
+function handleMove(source, target) {
+    console.log("handleMove", source, target, playerColor, game.turn(), game);
+    if (game.turn() != playerColor[0]) {
+        console.log("Vous ne pouvez pas jouer, c'est au tour de l'autre joueur");
+        alert("Vous ne pouvez pas jouer, c'est au tour de l'autre joueur");
+        return 'snapback';
+    }else if (game.turn() === playerColor[0]){
+        // TODO vérfifier si le joueur n'a pas fait un mouvement sur un pion adverse
+
+        // const move = game.move({ from: source, to: target });
+        const move = game.move(target);
+        if (move === null) {
+            return 'snapback';
+        } else {
+            socket.emit('makeMove', { gameId: currentGameId, from: source, to: target });
+        }
+    }
+}
