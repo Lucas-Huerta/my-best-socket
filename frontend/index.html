@@ -9,31 +9,28 @@
       href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
       integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU"
       crossorigin="anonymous">
-    <style>
-        #board {
-            width: 400px;
-            margin: 20px auto;
-        }
-        #controls {
-            text-align: center;
-            margin: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="./style.css">
 </head>
 <body>
     <div id="controls">
-        <button id="createGame">Create Game</button>
-        <button id="joinGame">Join Game</button>
-        <input type="text" id="gameIdInput" placeholder="Enter Game ID">
+        <div class="rowCreateGame">
+            <button id="createGame">Créer une partie</button>
+        </div>
+        <div class="rowJoinGame">
+            <button id="joinGame">Rejoindre une partie</button>
+            <p id="idGame"></p>
+            <input type="text" id="gameIdInput" placeholder="ID de la partie">
+        </div>
     </div>
     <div id="board"></div>
     
     <div id="playerColor"></div>
 
-    <button id="startGame">Start game !</button>
-    <div id="gameStarted">
-
-    </div>
+    <button id="startGame">Démarrer la partie !</button>
+    <div id="gameStarted"></div>
+    <p id="infoTurn">
+        <span id="playerTurn"></span>
+    </p>
 </body>
 <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
 <script src="https://cdnjs.com/libraries/chess.js"></script>

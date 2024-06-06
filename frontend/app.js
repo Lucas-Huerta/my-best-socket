@@ -5,6 +5,11 @@ const htmlPlayerColor = document.getElementById("playerColor");
 const htmlGameStarted = document.getElementById("gameStarted");
 const htmlButtonCreate = document.getElementById("createGame");
 const htmlButtonJoin = document.getElementById("joinGame");
+const htmlButtonStartGame = document.getElementById("startGame");
+const htmlInfoTurn = document.getElementById("infoTurn");
+const htmlPlayerTurn = document.getElementById("playerTurn");
+const htmlIdGame = document.getElementById("idGame");
+const htmlGameInput = document.getElementById("gameIdInput");
 
 let config = {
     draggable: true,
@@ -32,20 +37,24 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on('gameCreated', ({ gameId, color }) => {
         currentGameId = gameId;
         playerColor = color;
-        htmlPlayerColor.innerHTML = `Vous avez créer une partie nommée : ${gameId} et vous jouerez les pions : ${color} .`;
+        htmlPlayerColor.innerHTML = `Vous avez créer une partie nommée : <b>${gameId}</b> et vous jouerez les pions : <b>${color}</b>.`;
     });
 
     socket.on('gameJoined', ({ gameId, color }) => {
         currentGameId = gameId;
         playerColor = color;
-        htmlPlayerColor.innerHTML = `Vous avez rejoins une partie nommée ${gameId} les pions : ${color}.`;
+        htmlPlayerColor.innerHTML = `Vous avez rejoins une partie nommée <b>${gameId}</b> et vous jouez les pions : <b>${color}</b>.`;
     });
 
     socket.on('startGame', ({ gameId, state }) => {
         htmlPlayerColor.innerHTML = null;
         htmlButtonCreate.style.display = 'none';
         htmlButtonJoin.style.display = 'none';
-        htmlGameStarted.innerHTML = `La partie a commencée ! Vous jouez les pions : ${playerColor}.`;
+        htmlGameStarted.innerHTML = `La partie a commencée ! Vous êtes les pions de couleur : <b>${playerColor === 'white' ? 'blanche' : 'noir'}</b>.`;
+        htmlGameInput.style.display = 'none';
+        htmlIdGame.innerHTML = `Partie en cours : <b>${gameId}</b>.`;
+        htmlInfoTurn.style.display = 'block';
+        htmlPlayerTurn.innerHTML = `C'est au tour des pions : <b>${playerColor === 'white' ? 'blancs' : 'noirs'}</b>.`;
         config = {
             ...config,
             orientation: playerColor === 'white' ? 'white' : 'black',
@@ -53,10 +62,10 @@ document.addEventListener("DOMContentLoaded", () => {
         };
         board = ChessBoard('board', config);
         game.load(state);
+        htmlButtonStartGame.style.display = 'none';
     });
 
     socket.on('moveMade', ({ move, state }) => {
-        console.log("moveMade", move, state);
         game.load(state);
         config = {
             ...config,
@@ -64,6 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
             position: game.fen(), 
         };
         board = ChessBoard('board', config);
+        htmlPlayerTurn.innerHTML = `C'est au tour des pions : <b>${playerColor === 'white' ? 'blancs' : 'noirs'}</b>.`;
     });
 
     socket.on('error', ({ message }) => {
@@ -83,13 +93,12 @@ htmlStartGame.addEventListener("click", () => {
 })
 
 function handleMove(source, target) {
-    console.log("handleMove", source, target, playerColor, game.turn(), game);
     if (game.turn() != playerColor[0]) {
         console.log("Vous ne pouvez pas jouer, c'est au tour de l'autre joueur");
         alert("Vous ne pouvez pas jouer, c'est au tour de l'autre joueur");
         return 'snapback';
     }else if (game.turn() === playerColor[0]){
-        const move = game.move({ from: source, to: target }); // Mise à jour ici
+        const move = game.move({ from: source, to: target });
         if (move === null) {
             return 'snapback';
         } else {
