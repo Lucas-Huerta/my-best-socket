@@ -1,8 +1,6 @@
 import express from 'express';
 import http from 'http';
-import ip from 'ip';
 import { Server } from 'socket.io';
-import cors from 'cors';
 import { Chess } from 'chess.js';
 
 const app = express();
