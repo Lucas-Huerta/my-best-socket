@@ -1,5 +1,6 @@
 import express from 'express';
 import http from 'http';
+import cors from 'cors';
 import { Server } from 'socket.io';
 import { Chess } from 'chess.js';
 
@@ -10,6 +11,7 @@ const io = new Server(server, {
         origin: '*',
         }
 })
+app.use(cors())
 
 let games = {}; 
 
