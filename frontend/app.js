@@ -1,11 +1,14 @@
 const socket = io('https://my-best-socket.onrender.com');
+// const socket = io('http://localhost:3000');
 let currentGameId = null;
 let playerColor = null;
 const htmlPlayerColor = document.getElementById("playerColor");
 const htmlGameStarted = document.getElementById("gameStarted");
 const htmlButtonCreate = document.getElementById("createGame");
+const htmlStartGame = document.getElementById("startGame");
 const htmlButtonJoin = document.getElementById("joinGame");
 const htmlButtonStartGame = document.getElementById("startGame");
+const htmlButtonQuitGame = document.getElementById("quitGame");
 const htmlInfoTurn = document.getElementById("infoTurn");
 const htmlPlayerTurn = document.getElementById("playerTurn");
 const htmlIdGame = document.getElementById("idGame");
@@ -37,12 +40,14 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on('gameCreated', ({ gameId, color }) => {
         currentGameId = gameId;
         playerColor = color;
+        htmlButtonStartGame.style.display = 'block';
         htmlPlayerColor.innerHTML = `Vous avez créer une partie nommée : <b>${gameId}</b> et vous jouerez les pions : <b>${color}</b>.`;
     });
 
     socket.on('gameJoined', ({ gameId, color }) => {
         currentGameId = gameId;
         playerColor = color;
+        htmlButtonStartGame.style.display = 'block';
         htmlPlayerColor.innerHTML = `Vous avez rejoins une partie nommée <b>${gameId}</b> et vous jouez les pions : <b>${color}</b>.`;
     });
 
@@ -54,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
         htmlGameInput.style.display = 'none';
         htmlIdGame.innerHTML = `Partie en cours : <b>${gameId}</b>.`;
         htmlInfoTurn.style.display = 'block';
-        htmlPlayerTurn.innerHTML = `C'est au tour des pions : <b>${playerColor === 'white' ? 'blancs' : 'noirs'}</b>.`;
+        htmlButtonQuitGame.style.display = 'block';
         config = {
             ...config,
             orientation: playerColor === 'white' ? 'white' : 'black',
@@ -73,16 +78,31 @@ document.addEventListener("DOMContentLoaded", () => {
             position: game.fen(), 
         };
         board = ChessBoard('board', config);
-        htmlPlayerTurn.innerHTML = `C'est au tour des pions : <b>${playerColor === 'white' ? 'blancs' : 'noirs'}</b>.`;
     });
 
     socket.on('error', ({ message }) => {
         alert(`${message}.`);
     });
+
+    socket.on('gameQuit', () => {
+        htmlGameStarted.innerHTML = null;
+        htmlButtonCreate.style.display = 'block';
+        htmlButtonJoin.style.display = 'block';
+        htmlGameInput.style.display = 'block';
+        htmlIdGame.innerHTML = null;
+        htmlInfoTurn.style.display = 'none';
+        htmlButtonQuitGame.style.display = 'none';
+        config = {
+            ...config,
+            orientation: 'white',
+            position: 'start',
+        };
+        board = ChessBoard('board', config);
+        game.reset();
+    })
 });
 
 
-const htmlStartGame = document.getElementById("startGame");
 htmlStartGame.addEventListener("click", () => {
     if (currentGameId != null) {
         socket.emit('startGame', currentGameId)
@@ -90,6 +110,17 @@ htmlStartGame.addEventListener("click", () => {
         console.log("Vous devez rejoindre une partie avant de commencer");
         alert("Vous devez rejoindre une partie avant de commencer")
     }
+})
+
+htmlButtonQuitGame.addEventListener("click", () => {
+    socket.emit('quitGame', currentGameId);
+    config = {
+        ...config,
+        orientation: 'white',
+        position: 'start', 
+    };
+    board = ChessBoard('board', config);
+    game.reset();
 })
 
 function handleMove(source, target) {

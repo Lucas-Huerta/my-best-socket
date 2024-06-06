@@ -58,6 +58,20 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('quitGame', (gameId) => {
+        const game = games[gameId];
+        if (game) {
+            game.players = game.players.filter(player => player !== socket.id);
+            if (game.players.length === 0) {
+                delete games[gameId];
+                console.log(`Game ID: ${gameId} deleted`);
+            } else {
+                io.to(gameId).emit('gameQuit');
+                console.log(`Player quit game ID: ${gameId}`);
+            }
+        }
+    });
+
     socket.on('disconnect', () => {
         console.log('Client disconnected', socket.id);
         // Clean up any games that the disconnected client was part of
@@ -71,16 +85,16 @@ io.on('connection', (socket) => {
         }
     });
 
-socket.on('startGame', (gameId) => {
-    const game = games[gameId];
-    if (game && game.players.length === 2) {
-        io.to(gameId).emit('startGame', { gameId, state: game.chess.fen() });
-        console.log(`Game ID: ${gameId} started`);
-    } else {
-        console.log('Game does not exist or is not full');
-        socket.emit('error', { message: 'La partie n\'existe pas ou n\'est pas pleine' });
-    }
-})
+    socket.on('startGame', (gameId) => {
+        const game = games[gameId];
+        if (game && game.players.length === 2) {
+            io.to(gameId).emit('startGame', { gameId, state: game.chess.fen() });
+            console.log(`Game ID: ${gameId} started`);
+        } else {
+            console.log('Game does not exist or is not full');
+            socket.emit('error', { message: 'La partie n\'existe pas ou n\'est pas pleine' });
+        }
+    })
 });
 
 const generateGameId = () => {
